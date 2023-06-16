@@ -1,40 +1,46 @@
-const CACHE_NAME = 'dog-adoption-cache-v1';
+const CACHE_NAME = 'dog-adoption-cache-v5';
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
-    
-    event.waitUntil(
-        fetch('cache-files.json').then(response => response.json()).then(files => {
-            caches.open(CACHE_NAME).then((cache) => {
-                return cache.addAll(files);
-            });
-        })
-    );
+
+    event.waitUntil((async () => {
+        try {
+            const response = await fetch('cache-files.json');
+            const files = await response.json();
+            const cache = await caches.open(CACHE_NAME);
+            return cache.addAll(files);
+        } catch (err) {
+            console.error('Error caching files:', err);
+        }
+    })());
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
+    event.waitUntil((async () => {
+        try {
+            const cacheNames = await caches.keys();
+            const promises = cacheNames.map(async (cacheName) => {
+                if (cacheName !== CACHE_NAME) {
+                    return caches.delete(cacheName);
+                }
+            });
+            return Promise.all(promises);
+        } catch (err) {
+            console.error('Error during activation:', err);
+        }
+    })());
 });
+
 
 self.addEventListener('fetch', (event) => {
     if (event.request.method === 'GET') {
-        event.respondWith(
-            caches.match(event.request).then((cachedResponse) => {
-                return cachedResponse || fetch(event.request);
-            })
-        );
+        event.respondWith((async () => {
+            const cachedResponse = await caches.match(event.request);
+            return cachedResponse || fetch(event.request);
+        })());
     }
 });
+
 
 self.addEventListener('message', (event) => {
    

@@ -12,14 +12,6 @@ if ('serviceWorker' in navigator) {
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
         console.log("new service worker registered");
-        // window.location.reload();    
+        window.location.reload();    
     });
-}
-
-function updateCache() {
-    if (navigator.serviceWorker && globalRegistration.active) {
-     
-        globalRegistration.active.postMessage({ type: 'UPDATE_CACHE' });
-       
-    }
 }
